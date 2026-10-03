@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
@@ -51,6 +51,10 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.AgentUltra">
 
+        <property
+            android:name="android.app.appfunctions.app_metadata"
+            android:resource="@xml/app_metadata" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -85,6 +89,23 @@
                 android:name="com.android.systemui.action_assist_icon"
                 android:resource="@mipmap/ic_launcher"/>
         </activity>
+
+
+        <service
+            android:name="com.agent.ultra.agent.UltraAgentAppFunctionService"
+            android:permission="android.permission.BIND_APP_FUNCTION_SERVICE"
+            android:exported="true"
+            tools:targetApi="36">
+            <property
+                android:name="android.app.appfunctions.schema"
+                android:value="app_functions_schema.xsd" />
+            <property
+                android:name="android.app.appfunctions.v2"
+                android:value="ultra_agent_app_function_service.xml" />
+            <intent-filter>
+                <action android:name="android.app.appfunctions.AppFunctionService" />
+            </intent-filter>
+        </service>
 
         <service
             android:name=".AgentAccessibilityService"

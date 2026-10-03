@@ -34,14 +34,14 @@ android {
     }
 
     namespace = "com.agent.ultra"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.agent.ultra"
+        applicationId = "com.agent.ultra.a54"
         minSdk = 26
         targetSdk = 35
-        versionCode = 15
-        versionName = "2.4.0-native"
+        versionCode = 1601
+        versionName = "2.4.0-a54.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables { useSupportLibrary = true }
@@ -135,6 +135,8 @@ android {
 
 dependencies {
     implementation(libs.androidx.core.ktx)
+    implementation("androidx.appfunctions:appfunctions:1.0.0-alpha12")
+    ksp("androidx.appfunctions:appfunctions-compiler:1.0.0-alpha12")
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
