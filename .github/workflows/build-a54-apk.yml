@@ -30,7 +30,9 @@ jobs:
           java-version: '17'
 
       - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
+        with:
+          log-accepted-android-sdk-licenses: false
 
       - name: Install Android build tools
         run: |
@@ -61,8 +63,6 @@ jobs:
           rm -rf "$HOME/llama-android"
           cmake --install "$RUNNER_TEMP/llama-build" --prefix "$HOME/llama-android"
           test -f "$HOME/llama-android/lib/libllama.a"
-          ls -lah "$HOME/llama-android/lib"
-          ls -lah "$HOME/llama-android/include"
 
       - name: Run JVM tests
         working-directory: ultra-native
