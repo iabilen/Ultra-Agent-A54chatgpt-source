@@ -34,7 +34,7 @@ android {
     }
 
     namespace = "com.agent.ultra"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.agent.ultra.a54"
