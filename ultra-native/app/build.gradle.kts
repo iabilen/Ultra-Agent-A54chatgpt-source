@@ -25,7 +25,7 @@ android {
 
     defaultConfig {
         applicationId = "com.agent.ultra.a54"
-        minSdk = 22
+        minSdk = 28
         targetSdk = 35
         versionCode = 1601
         versionName = "2.4.0-a54.1"
@@ -36,8 +36,7 @@ android {
     }
 
     // Keep the Android-side native build on the exact same NDK used to compile
-    // llama.cpp in CI. Mixing NDK 27 app linking with NDK 29 llama libraries
-    // causes libc symbol mismatches such as stderr/__readlink_chk.
+    // llama.cpp in CI. Mixing NDK versions causes libc symbol mismatches.
     ndkVersion = "29.0.14206865"
 
     signingConfigs {
@@ -67,9 +66,6 @@ android {
             signingConfig = signingConfigs.findByName("legacyDebug") ?: signingConfigs.getByName("debug")
         }
         release {
-            // No debug-key fallback here. 2.3.0 was published debug-signed
-            // because this silently fell back; a release build now fails
-            // unless the real release key is available.
             signingConfig = signingConfigs.getByName(
                 if (releaseKeystore != null) "release"
                 else if (signingConfigs.findByName("legacyDebug") != null) "legacyDebug" else "debug"
@@ -99,9 +95,9 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.ui)
-    implementation(libs.androidx.ui.graphics)
-    implementation(libs.androidx.ui.tooling.preview)
+    implementation(libs.androidx.compose.ui)
+    implementation(libs.androidx.compose.ui.graphics)
+    implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.kotlinx.coroutines.android)
@@ -117,10 +113,9 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.androidx.ui.test.junit4)
-    androidTestImplementation(platform(libs.androidx.compose.bom))
-    debugImplementation(libs.androidx.ui.tooling)
-    debugImplementation(libs.androidx.ui.test.manifest)
+    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+    debugImplementation(libs.androidx.compose.ui.tooling)
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
 }
 
 // A release build without the release key must fail, not quietly produce a
