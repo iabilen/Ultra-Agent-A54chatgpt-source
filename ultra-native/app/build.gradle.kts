@@ -34,7 +34,7 @@ android {
     }
 
     namespace = "com.agent.ultra"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.agent.ultra.a54"
@@ -46,17 +46,17 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables { useSupportLibrary = true }
         // The phone is arm64. `-Pbench` builds for the x86_64 emulator instead (AndroidWorld):
-        // same package, same output paths, no on-device model — CMakeLists skips non-arm64 ABIs,
+        // same package, same output paths, no on-device model â CMakeLists skips non-arm64 ABIs,
         // and LlmNative reports the library missing rather than dying.
         ndk { abiFilters += listOf(if (project.hasProperty("bench")) "x86_64" else "arm64-v8a") }
     }
 
     signingConfigs {
         // Same keystore the Expo builds used (android/app/debug.keystore, copied
-        // here) — install-over continuity on devices carrying a Build 29/30 install.
+        // here) â install-over continuity on devices carrying a Build 29/30 install.
         // Kept OUT of git since 2026-09-11 (gitignored; backup in ~/keys): anyone
-        // holding it can sign an update over those installs. When it's absent —
-        // a fresh clone — builds use the SDK's standard debug key instead.
+        // holding it can sign an update over those installs. When it's absent â
+        // a fresh clone â builds use the SDK's standard debug key instead.
         if (file("debug.keystore").exists()) {
             create("legacyDebug") {
                 storeFile = file("debug.keystore")
@@ -74,8 +74,8 @@ android {
         // as a legitimate update to this app, installing straight over it.
         //
         // keystore.properties is gitignored and holds the only copy of the
-        // password. When it is absent — a fresh clone, or anyone else's machine
-        // — the build falls back to the debug key rather than failing, because
+        // password. When it is absent â a fresh clone, or anyone else's machine
+        // â the build falls back to the debug key rather than failing, because
         // a local build is not a release and should not need the secret.
         if (releaseKeystore != null) {
             create("release") {
@@ -104,7 +104,7 @@ android {
             // No debug-key fallback here. 2.3.0 was published debug-signed
             // because this silently fell back, and a debug-signed APK can be
             // updated by anyone: that key's password ships in the public SDK.
-            // Without the release key a release build now fails outright — see
+            // Without the release key a release build now fails outright â see
             // the taskGraph check below.
             signingConfig = signingConfigs.getByName(
                 if (releaseKeystore != null) "release"
