@@ -1,5 +1,4 @@
 name: Build A54 APK
-
 on:
   workflow_dispatch:
   push:
@@ -7,70 +6,47 @@ on:
     paths:
       - 'ultra-native/**'
       - '.github/workflows/build-a54-apk.yml'
-
 concurrency:
   group: a54-apk-${{ github.ref }}
   cancel-in-progress: true
-
 env:
   NDK_VERSION: '29.0.14206865'
   LLAMA_CPP_REF: master
-
 jobs:
   build:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
-
       - name: Set up Android SDK
-        uses: android-actions/setup-android@v4
+        uses: android-actions/setup-android@v3
         with:
           log-accepted-android-sdk-licenses: false
-
       - name: Install Android build tools
         run: |
           sdkmanager "platforms;android-36" "build-tools;36.0.0" "ndk;${NDK_VERSION}"
           echo "ANDROID_NDK_ROOT=${ANDROID_SDK_ROOT}/ndk/${NDK_VERSION}" >> "$GITHUB_ENV"
-
       - name: Install native build tools
         run: sudo apt-get update && sudo apt-get install -y ninja-build
-
       - name: Build llama.cpp for arm64
         run: |
           git clone --depth 1 --branch "${LLAMA_CPP_REF}" https://github.com/ggml-org/llama.cpp.git "$RUNNER_TEMP/llama.cpp"
-          cmake -S "$RUNNER_TEMP/llama.cpp" -B "$RUNNER_TEMP/llama-build" -G Ninja \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_TOOLCHAIN_FILE="${ANDROID_NDK_ROOT}/build/cmake/android.toolchain.cmake" \
-            -DANDROID_ABI=arm64-v8a \
-            -DANDROID_PLATFORM=android-28 \
-            -DBUILD_SHARED_LIBS=OFF \
-            -DGGML_NATIVE=OFF \
-            -DGGML_OPENMP=OFF \
-            -DLLAMA_OPENSSL=OFF \
-            -DLLAMA_BUILD_TESTS=OFF \
-            -DLLAMA_BUILD_EXAMPLES=OFF \
-            -DLLAMA_BUILD_TOOLS=OFF \
-            -DLLAMA_BUILD_SERVER=OFF
+          cmake -S "$RUNNER_TEMP/llama.cpp" -B "$RUNNER_TEMP/llama-build" -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE="${ANDROID_NDK_ROOT}/build/cmake/android.toolchain.cmake" -DANDROID_ABI=arm64-v8a -DANDROID_PLATFORM=android-28 -DBUILD_SHARED_LIBS=OFF -DGGML_NATIVE=OFF -DGGML_OPENMP=OFF -DLLAMA_OPENSSL=OFF -DLLAMA_BUILD_TESTS=OFF -DLLAMA_BUILD_EXAMPLES=OFF -DLLAMA_BUILD_TOOLS=OFF -DLLAMA_BUILD_APP=OFF -DLLAMA_BUILD_SERVER=OFF
           cmake --build "$RUNNER_TEMP/llama-build" --config Release -j2
           rm -rf "$HOME/llama-android"
           cmake --install "$RUNNER_TEMP/llama-build" --prefix "$HOME/llama-android"
           test -f "$HOME/llama-android/lib/libllama.a"
-
       - name: Run JVM tests
         working-directory: ultra-native
         run: ./gradlew test --no-daemon
-
       - name: Assemble debug APK
         working-directory: ultra-native
         run: ./gradlew assembleDebug --no-daemon
-
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
