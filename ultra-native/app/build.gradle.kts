@@ -15,24 +15,11 @@ plugins {
  * that has no business holding the secret.
  */
 val releaseKeystore: Properties? =
-    // rootProject, not the app module: file() here would look inside app/.
     rootProject.file("keystore.properties").takeIf { it.exists() }?.let { f ->
         Properties().apply { f.inputStream().use { load(it) } }
     }
 
 android {
-    // The shared gate vectors (src/test/resources/gate_vectors.json) are also read on the
-    // device by SharedVectorsDeviceTest: one file, no copy to drift.
-    sourceSets.getByName("androidTest").assets.srcDir("src/test/resources")
-
-    testOptions {
-        // ScreenStructure logs which method chose the records, which is the
-        // only way to tell on a device whether the template match or the
-        // fallback ran. android.util.Log throws in a JVM unit test unless
-        // stubs return defaults.
-        unitTests.isReturnDefaultValues = true
-    }
-
     namespace = "com.agent.ultra"
     compileSdk = 36
 
@@ -45,18 +32,10 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables { useSupportLibrary = true }
-        // The phone is arm64. `-Pbench` builds for the x86_64 emulator instead (AndroidWorld):
-        // same package, same output paths, no on-device model â CMakeLists skips non-arm64 ABIs,
-        // and LlmNative reports the library missing rather than dying.
         ndk { abiFilters += listOf(if (project.hasProperty("bench")) "x86_64" else "arm64-v8a") }
     }
 
     signingConfigs {
-        // Same keystore the Expo builds used (android/app/debug.keystore, copied
-        // here) â install-over continuity on devices carrying a Build 29/30 install.
-        // Kept OUT of git since 2026-09-11 (gitignored; backup in ~/keys): anyone
-        // holding it can sign an update over those installs. When it's absent â
-        // a fresh clone â builds use the SDK's standard debug key instead.
         if (file("debug.keystore").exists()) {
             create("legacyDebug") {
                 storeFile = file("debug.keystore")
@@ -65,29 +44,12 @@ android {
                 keyPassword = "android"
             }
         }
-
-        // The real signing key, for anything that leaves this machine.
-        //
-        // 2.0.0 and 2.1.0 went out signed with the DEBUG key, whose password is
-        // "android" and which ships inside the Android SDK. Anyone at all can
-        // sign an APK with it, and Android would accept that stranger's build
-        // as a legitimate update to this app, installing straight over it.
-        //
-        // keystore.properties is gitignored and holds the only copy of the
-        // password. When it is absent â a fresh clone, or anyone else's machine
-        // â the build falls back to the debug key rather than failing, because
-        // a local build is not a release and should not need the secret.
         if (releaseKeystore != null) {
             create("release") {
                 storeFile = file(releaseKeystore!!.getProperty("storeFile"))
                 storePassword = releaseKeystore!!.getProperty("storePassword")
                 keyAlias = releaseKeystore!!.getProperty("keyAlias")
                 keyPassword = releaseKeystore!!.getProperty("keyPassword")
-                // v3 carries a proof-of-rotation record, so this key can be
-                // replaced later without every install having to be removed.
-                // If this key is ever exposed, that is the difference between
-                // an update and starting again. v1 is off: it is only needed
-                // below API 24 and minSdk here is 26.
                 enableV1Signing = false
                 enableV2Signing = true
                 enableV3Signing = true
@@ -97,15 +59,13 @@ android {
 
     buildTypes {
         debug {
-            signingConfig = signingConfigs.findByName("legacyDebug")
-                ?: signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.findByName("legacyDebug") ?: signingConfigs.getByName("debug")
         }
         release {
             // No debug-key fallback here. 2.3.0 was published debug-signed
-            // because this silently fell back, and a debug-signed APK can be
-            // updated by anyone: that key's password ships in the public SDK.
-            // Without the release key a release build now fails outright â see
-            // the taskGraph check below.
+            // because this silently fell back; a debug-signed APK can be
+            // updated by anyone. Without the release key a release build now
+            // fails outright (see taskGraph check below).
             signingConfig = signingConfigs.getByName(
                 if (releaseKeystore != null) "release"
                 else if (signingConfigs.findByName("legacyDebug") != null) "legacyDebug"
@@ -116,6 +76,7 @@ android {
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -136,7 +97,7 @@ android {
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation("androidx.appfunctions:appfunctions:1.0.0-alpha10")
-    ksp("androidx.appfunctions:appfunctions-compiler:1.0.0-alpha11")
+    ksp("androidx.appfunctions:appfunctions-compiler:1.0.0-alpha10")
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
@@ -144,7 +105,6 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
-    implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.serialization.json)
@@ -155,12 +115,13 @@ dependencies {
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
-    // org.json on the JVM test classpath (Android ships it; unit tests need it)
+    // org.json is on the JVM test classpath (Android ships it; unit tests need it)
     testImplementation("org.json:json:20240303")
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.ui.test.junit4)
+    androidTestImplementation(platform(libs.androidx.compose.bom))
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 }
