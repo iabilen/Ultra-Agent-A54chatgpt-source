@@ -25,7 +25,7 @@ android {
 
     defaultConfig {
         applicationId = "com.agent.ultra.a54"
-        minSdk = 26
+        minSdk = 22
         targetSdk = 35
         versionCode = 1601
         versionName = "2.4.0-a54.1"
@@ -63,9 +63,8 @@ android {
         }
         release {
             // No debug-key fallback here. 2.3.0 was published debug-signed
-            // because this silently fell back; a debug-signed APK can be
-            // updated by anyone. Without the release key a release build now
-            // fails outright (see taskGraph check below).
+            // because this silently fell back; a release build now fails
+            // unless the real release key is available.
             signingConfig = signingConfigs.getByName(
                 if (releaseKeystore != null) "release"
                 else if (signingConfigs.findByName("legacyDebug") != null) "legacyDebug"
@@ -89,15 +88,11 @@ android {
             version = "3.28.3"
         }
     }
-    packaging {
-        resources { excludes += "/META-INF/{AL2.0,LGPL2.1}" }
-    }
+    packaging { resources { excludes += "/META-INF/{AL2.0,LGPL2.1}" } }
 }
 
 dependencies {
     implementation(libs.androidx.core.ktx)
-    implementation("androidx.appfunctions:appfunctions:1.0.0-alpha10")
-    ksp("androidx.appfunctions:appfunctions-compiler:1.0.0-alpha10")
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
@@ -115,7 +110,6 @@ dependencies {
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
-    // org.json is on the JVM test classpath (Android ships it; unit tests need it)
     testImplementation("org.json:json:20240303")
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -127,13 +121,9 @@ dependencies {
 }
 
 // A release build without the release key must fail, not quietly produce a
-// debug-signed APK that looks publishable. 2.3.0 went out that way: signed
-// CN=Android Debug, whose password is inside the public Android SDK, so anyone
-// could sign an update over it. Debug builds are unaffected.
+// debug-signed APK that looks publishable. Debug builds are unaffected.
 gradle.taskGraph.whenReady {
-    if (releaseKeystore == null &&
-        allTasks.any { it.name.startsWith("assembleRelease") || it.name.startsWith("bundleRelease") }
-    ) {
+    if (releaseKeystore == null && allTasks.any { it.name.startsWith("assembleRelease") || it.name.startsWith("bundleRelease") }) {
         throw GradleException(
             "No keystore.properties: this machine does not hold the release key. " +
                 "Use assembleDebug, or add keystore.properties before building a release."
