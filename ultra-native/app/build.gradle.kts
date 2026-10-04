@@ -35,6 +35,11 @@ android {
         ndk { abiFilters += listOf(if (project.hasProperty("bench")) "x86_64" else "arm64-v8a") }
     }
 
+    // Keep the Android-side native build on the exact same NDK used to compile
+    // llama.cpp in CI. Mixing NDK 27 app linking with NDK 29 llama libraries
+    // causes libc symbol mismatches such as stderr/__readlink_chk.
+    ndkVersion = "29.0.14206865"
+
     signingConfigs {
         if (file("debug.keystore").exists()) {
             create("legacyDebug") {
@@ -67,8 +72,7 @@ android {
             // unless the real release key is available.
             signingConfig = signingConfigs.getByName(
                 if (releaseKeystore != null) "release"
-                else if (signingConfigs.findByName("legacyDebug") != null) "legacyDebug"
-                else "debug"
+                else if (signingConfigs.findByName("legacyDebug") != null) "legacyDebug" else "debug"
             )
             isMinifyEnabled = true
             isShrinkResources = true
@@ -95,9 +99,9 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.ui)
-    implementation(libs.androidx.ui.graphics)
-    implementation(libs.androidx.ui.tooling.preview)
+    implementation(libs.androidx.compose.ui)
+    implementation(libs.androidx.compose.ui.graphics)
+    implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.kotlinx.coroutines.android)
@@ -113,10 +117,10 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.androidx.ui.test.junit4)
+    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     androidTestImplementation(platform(libs.androidx.compose.bom))
-    debugImplementation(libs.androidx.ui.tooling)
-    debugImplementation(libs.androidx.ui.test.manifest)
+    debugImplementation(libs.androidx.compose.ui.tooling)
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
 }
 
 // A release build without the release key must fail, not quietly produce a
