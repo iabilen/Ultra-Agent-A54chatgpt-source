@@ -34,7 +34,7 @@ android {
     }
 
     namespace = "com.agent.ultra"
-    compileSdk = 37
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.agent.ultra.a54"
@@ -135,7 +135,7 @@ android {
 
 dependencies {
     implementation(libs.androidx.core.ktx)
-    implementation("androidx.appfunctions:appfunctions:1.0.0-alpha11")
+    implementation("androidx.appfunctions:appfunctions:1.0.0-alpha10")
     ksp("androidx.appfunctions:appfunctions-compiler:1.0.0-alpha11")
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
