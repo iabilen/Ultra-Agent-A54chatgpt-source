@@ -1,4 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<AppFunctionAppMetadata xmlns:appfn="http://schemas.android.com/apk/res-auto"
-    appfn:description="Use runTask to carry out a concrete task the user has explicitly requested on this Android phone. The function routes the request through Agent Ultra's existing on-device/cloud brain, accessibility controller, policy gate, and confirmation flow. Do not invent tasks, expose secrets, or bypass confirmations. Prefer concise, user-requested actions."
-    appfn:displayDescription="@string/app_function_app_display_description" />
